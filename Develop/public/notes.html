@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Note Taker</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.1.3/flatly/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU"
+    crossorigin="anonymous">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+</head>
+
+<body>
+  <nav class="navbar navbar-dark bg-dark">
+    <a class="navbar-brand" href="/">Note Taker
+    </a>
+    <div class="icons">
+      <i class="fas fa-save text-light save-note"></i>
+      <i class="fas fa-pen text-light new-note"></i>
+    </div>
+  </nav>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-4 list-container">
+        <div class="card">
+          <ul class="list-group">
+          </ul>
+        </div>
+      </div>
+      <div class="col-8">
+        <input class="note-title" placeholder="Note Title" maxlength="28" type="text">
+        <textarea class="note-textarea" placeholder="Note Text"></textarea>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <!-- <script src="assets/js/index.js"></script> -->
+  <script>
+    var $noteTitle = $(".note-title");
+    var $noteText = $(".note-textarea");
+    var $saveNoteBtn = $(".save-note");
+    var $newNoteBtn = $(".new-note");
+    var $noteList = $(".list-container .list-group");
+
+    var activeNote = {};
+
+    function getNotes() {
+      return $.ajax({
+        url: "/api/notes",
+        method: "GET"
+      });
+    }
+
+    function saveNote(note) {
+      return $.ajax({
+        url: "/api/notes",
+        data: note,
+        method: "POST"
+      });
+    }
+
+    function deleteNote(id) {
+      return $.ajax({
+        url: "api/notes/" + id,
+        data: id,
+        method: "DELETE"
+      });
+    }
+
+    function renderActiveNote() {
+      $saveNoteBtn.hide();
+    
+      if (activeNote.id) {
+        $noteTitle.attr("readonly", true);
+        $noteText.attr("readonly", true);
+        $noteTitle.val(activeNote.title);
+        $noteText.val(activeNote.text);
+      } else {
+        $noteTitle.attr("readonly", false);
+        $noteText.attr("readonly", false);
+        $noteTitle.val("");
+        $noteText.val("");
+      }
+    }
+
+    //var id = 0;
+
+    function handleNoteSave() {
+      console.log("clicked");
+      //id++;
+      //if (id === )
+      var newNote = {
+        //id: id,
+        title: $noteTitle.val(),
+        text: $noteText.val()
+      };
+    
+      saveNote(newNote).then(function(data) {
+        getAndRenderNotes();
+        renderActiveNote();
+      });
+    }
+
+    function handleNoteDelete(event) {
+      console.log("delete clicked");
+      event.stopPropagation();
+    
+      var note = $(this)
+        .parent(".list-group-item")
+        .data();
+        console.log(note.title);
+      if (activeNote.id === note.id) {
+        console.log("ids match");
+        console.log("active", activeNote.id);
+        console.log("note chosen", note.id);
+        console.log("activeNote", activeNote);
+        activeNote = {};
+      }
+
+      console.log("activeNote", activeNote);
+      console.log("active", activeNote.id);
+      console.log("note chosen", note.id);
+    
+      deleteNote(note).then(function() {
+        getAndRenderNotes();
+        renderActiveNote();
+      });
+    }
+
+    function handleNoteView() {
+      activeNote = $(this).data();
+      renderActiveNote();
+    }
+
+    function handleNewNoteView() {
+      activeNote = {};
+      renderActiveNote();
+    }
+
+    function handleRenderSaveBtn() {
+      if (!$noteTitle.val().trim() || !$noteText.val().trim()) {
+        $saveNoteBtn.hide();
+      } else {
+        $saveNoteBtn.show();
+      }
+    }
+
+    function renderNoteList(notes) {
+      $noteList.empty();
+    
+      var noteListItems = [];
+    
+      for (var i = 0; i < notes.length; i++) {
+        var note = notes[i];
+    
+        var $li = $("<li class='list-group-item'>").data(note);
+        var $span = $("<span>").text(note.title);
+        var $delBtn = $(
+          "<i class='fas fa-trash-alt float-right text-danger delete-note'>"
+        );
+    
+        $li.append($span, $delBtn);
+        noteListItems.push($li);
+      }
+    
+      $noteList.append(noteListItems);
+    }
+
+    function getAndRenderNotes() {
+      return getNotes().then(function(data) {
+        renderNoteList(data);
+      });
+    };
+
+    $saveNoteBtn.on("click", handleNoteSave);
+    $noteList.on("click", ".list-group-item", handleNoteView);
+    $newNoteBtn.on("click", handleNewNoteView);
+    $noteList.on("click", ".delete-note", handleNoteDelete);
+    $noteTitle.on("keyup", handleRenderSaveBtn);
+    $noteText.on("keyup", handleRenderSaveBtn);
+    
+    getAndRenderNotes();
+  </script>
+</body>
+
+</html>
