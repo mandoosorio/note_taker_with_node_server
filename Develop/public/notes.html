@@ -85,14 +85,8 @@
       }
     }
 
-    //var id = 0;
-
     function handleNoteSave() {
-      console.log("clicked");
-      //id++;
-      //if (id === )
       var newNote = {
-        //id: id,
         title: $noteTitle.val(),
         text: $noteText.val()
       };
@@ -104,24 +98,14 @@
     }
 
     function handleNoteDelete(event) {
-      console.log("delete clicked");
       event.stopPropagation();
     
       var note = $(this)
         .parent(".list-group-item")
         .data();
-        console.log(note.title);
       if (activeNote.id === note.id) {
-        console.log("ids match");
-        console.log("active", activeNote.id);
-        console.log("note chosen", note.id);
-        console.log("activeNote", activeNote);
         activeNote = {};
       }
-
-      console.log("activeNote", activeNote);
-      console.log("active", activeNote.id);
-      console.log("note chosen", note.id);
     
       deleteNote(note).then(function() {
         getAndRenderNotes();
